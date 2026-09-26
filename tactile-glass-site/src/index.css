@@ -1,0 +1,44 @@
+@import '@fontsource-variable/newsreader';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+
+:root {
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: #292822;
+  background: #e9e4da;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  --paper: #e9e4da;
+  --paper-light: #f3efe7;
+  --paper-shadow: #d9d2c5;
+  --ink: #292822;
+  --ink-soft: #66645c;
+  --muted: #858176;
+  --line: rgba(61, 57, 47, .2);
+  --copper: #a34e38;
+  --copper-dark: #783a2c;
+  --moss: #586b58;
+  --brass: #a18b58;
+  --serif: 'Newsreader Variable', Georgia, serif;
+  --sans: 'IBM Plex Sans', Arial, sans-serif;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+::selection { color: var(--paper-light); background: var(--copper-dark); }
+:focus-visible { outline: 2px solid var(--copper); outline-offset: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
