@@ -30,6 +30,22 @@ def scan_message():
             if result is None:
                 # Keep the API usable on a fresh clone before the model is trained.
                 result = detector.analyze_message(message, msg_type)
+            else:
+                # Combine model language scores with explicit URL/brand heuristics.
+                heuristic = detector.analyze_message(message, msg_type)
+                if heuristic['risk_score'] > result['risk_score']:
+                    result = heuristic
+                else:
+                    known_reasons = {reason['title'] for reason in result['reasons']}
+                    result['reasons'].extend(
+                        reason for reason in heuristic['reasons']
+                        if reason['title'] != 'Clean Heuristics'
+                        and reason['title'] not in known_reasons
+                    )
+                    result['signals'] = {
+                        key: max(result['signals'].get(key, 0), heuristic['signals'].get(key, 0))
+                        for key in result['signals']
+                    }
         else:
             result = detector.analyze_message(message, msg_type)
 

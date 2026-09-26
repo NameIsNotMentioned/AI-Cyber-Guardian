@@ -18,13 +18,57 @@ function analyzeOffline(message: string): ScanResult {
   const text = message.toLowerCase()
   const rules = [
     { match: /urgent|act now|immediately|limited time|expires/, title: 'Urgent language', detail: 'The message pressures you to act quickly.' },
-    { match: /https?:\/\//, title: 'Link present', detail: 'A link was included. Check its destination before opening it.' },
+    { match: /(?:https?:\/\/|www\.)/, title: 'Link present', detail: 'A link was included. Check its destination before opening it.' },
     { match: /you won|claim your prize|congratulations|free gift/, title: 'Reward claim', detail: 'Unexpected prizes are commonly used to draw people into scams.' },
     { match: /verify your account|otp|password|bank details|pin|card number/, title: 'Sensitive information request', detail: 'The message appears to request credentials or payment information.' },
     { match: /dear customer|dear user/, title: 'Generic greeting', detail: 'The sender uses a broad greeting instead of identifying you.' },
   ]
-  const fired = rules.filter((rule) => rule.match.test(text))
-  const risk = Math.min(100, fired.reduce((sum, rule) => sum + (rule.title === 'Sensitive information request' ? 25 : rule.title === 'Urgent language' || rule.title === 'Reward claim' ? 20 : 15), 8))
+  const fired: { title: string; detail: string }[] = rules
+    .filter((rule) => rule.match.test(text))
+    .map(({ title, detail }) => ({ title, detail }))
+  const links = message.match(/(?:https?:\/\/|www\.)[^\s<>"']+/gi) ?? []
+  const trustedBrandHosts: Record<string, string[]> = {
+    paypal: ['paypal.com', 'paypal.co.uk'],
+    microsoft: ['microsoft.com', 'live.com', 'outlook.com'],
+    apple: ['apple.com', 'icloud.com'],
+    amazon: ['amazon.com', 'amazon.co.uk'],
+    google: ['google.com', 'accounts.google.com'],
+  }
+  let linkRisk = 0
+  for (const rawLink of links) {
+    const link = rawLink.replace(/[.,;:!?)}\]]+$/, '')
+    let parsed: URL
+    try {
+      parsed = new URL(/^https?:\/\//i.test(link) ? link : `http://${link}`)
+    } catch {
+      linkRisk = Math.max(linkRisk, 40)
+      fired.push({ title: 'Malformed link', detail: 'The link could not be parsed safely. Do not open it.' })
+      continue
+    }
+    const hostname = parsed.hostname.toLowerCase().replace(/^www\./, '')
+    const mentionedBrand = Object.entries(trustedBrandHosts).find(([brand]) =>
+      new RegExp(`(?:^|[^a-z0-9])${brand}\\.(?:com|co\\.uk|co\\.jp|net)`, 'i').test(link),
+    )
+    if (mentionedBrand) {
+      const [brand, hosts] = mentionedBrand
+      const hostMatchesBrand = hosts.some((host) => hostname === host || hostname.endsWith(`.${host}`))
+      if (!hostMatchesBrand) {
+        linkRisk = Math.max(linkRisk, 75)
+        fired.push({ title: 'Brand/domain mismatch', detail: `The URL mentions ${brand[0].toUpperCase()}${brand.slice(1)} but leads to ${hostname}. Check the registered domain before opening it.` })
+      }
+    }
+    if (!/^https:\/\//i.test(link)) {
+      linkRisk = Math.max(linkRisk, 25)
+      fired.push({ title: 'Link without HTTPS', detail: 'The link does not use an encrypted HTTPS connection.' })
+    }
+  }
+  const ruleRisk = fired.reduce((sum, rule) => sum + (
+    rule.title === 'Brand/domain mismatch' ? 75
+      : rule.title === 'Link without HTTPS' ? 25
+        : rule.title === 'Sensitive information request' ? 25
+          : rule.title === 'Urgent language' || rule.title === 'Reward claim' ? 20 : 15
+  ), 8)
+  const risk = Math.min(100, Math.max(ruleRisk, linkRisk))
   const verdict = risk > 60 ? 'DANGEROUS' : risk > 30 ? 'SUSPICIOUS' : 'SAFE'
   return {
     verdict,

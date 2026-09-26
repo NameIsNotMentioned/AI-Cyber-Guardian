@@ -84,9 +84,9 @@
             const findings = {
                 https: { val: '✓ Secure', status: 'safe' },
                 pattern: { val: 'No issues', status: 'safe' },
-                age: { val: '2 years', status: 'safe' },
-                redirects: { val: '0', status: 'safe' },
-                reputation: { val: 'Trusted', status: 'safe' }
+                age: { val: 'Not checked (no domain-age lookup)', status: 'suspicious' },
+                redirects: { val: 'Not checked (link not opened)', status: 'suspicious' },
+                reputation: { val: 'Unverified (no reputation feed)', status: 'suspicious' }
             };
 
             // 1. Check HTTPS
@@ -103,8 +103,10 @@
             }
 
             // 3. Check Subdomain count
+            let hostname = '';
             try {
-                const domain = new URL(url.includes('://') ? url : `http://${url}`).hostname;
+                hostname = new URL(url.includes('://') ? url : `http://${url}`).hostname.toLowerCase();
+                const domain = hostname;
                 const parts = domain.split('.');
                 if (parts.length > 3) {
                     score += 20;
@@ -135,6 +137,26 @@
                 findings.pattern = { val: '⛔ Auth Trick', status: 'dangerous' };
             }
 
+            // Brand text in a path does not prove the destination belongs to that brand.
+            const trustedBrandHosts = {
+                paypal: ['paypal.com', 'paypal.co.uk'],
+                microsoft: ['microsoft.com', 'live.com', 'outlook.com'],
+                apple: ['apple.com', 'icloud.com'],
+                amazon: ['amazon.com', 'amazon.co.uk'],
+                google: ['google.com', 'accounts.google.com']
+            };
+            const mentionedBrand = Object.entries(trustedBrandHosts).find(([brand]) =>
+                new RegExp(`(?:^|[^a-z0-9])${brand}\\.(?:com|co\\.uk|co\\.jp|net)`, 'i').test(url)
+            );
+            if (mentionedBrand) {
+                const [brand, hosts] = mentionedBrand;
+                const actualHost = hostname.replace(/^www\./, '');
+                if (!hosts.some(host => actualHost === host || actualHost.endsWith(`.${host}`))) {
+                    score += 70;
+                    findings.pattern = { val: `Brand/domain mismatch: ${brand} text, host ${hostname}`, status: 'dangerous' };
+                }
+            }
+
             // Final Score Mapping
             score = Math.min(100, score);
             let verdict = 'SAFE';
@@ -142,12 +164,9 @@
             else if (score > 30) verdict = 'SUSPICIOUS';
 
             if (verdict === 'DANGEROUS') {
-                findings.reputation = { val: '🚩 Blacklisted', status: 'dangerous' };
-                findings.age = { val: '14 days', status: 'suspicious' };
-                findings.redirects = { val: '3 (Hidden)', status: 'suspicious' };
+                findings.reputation = { val: 'High URL heuristic risk', status: 'dangerous' };
             } else if (verdict === 'SUSPICIOUS') {
-                findings.reputation = { val: '⚠ Unverified', status: 'suspicious' };
-                findings.redirects = { val: '1', status: 'safe' };
+                findings.reputation = { val: 'Unverified (no reputation feed)', status: 'suspicious' };
             }
 
             return { verdict, score, findings };

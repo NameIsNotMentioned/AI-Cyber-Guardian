@@ -1,6 +1,37 @@
 import re
 from urllib.parse import urlparse
 
+URL_PATTERN = re.compile(
+    r"(?i)(?:(?:https?://|www\.)[^\s<>\"']+|"
+    r"(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/[^\s<>\"']*)?)"
+)
+KNOWN_BRAND_HOSTS = {
+    "paypal": ("paypal.com", "paypal.co.uk"),
+    "microsoft": ("microsoft.com", "live.com", "outlook.com"),
+    "apple": ("apple.com", "icloud.com"),
+    "amazon": ("amazon.com", "amazon.co.uk"),
+    "google": ("google.com", "accounts.google.com"),
+}
+
+
+def _extract_urls(text: str) -> list[str]:
+    return [match.rstrip(".,;:!?)]}") for match in URL_PATTERN.findall(text)]
+
+
+def _brand_path_mismatch(url: str, hostname: str) -> str | None:
+    normalized_host = hostname.lower().removeprefix("www.").rstrip(".")
+    for brand, trusted_hosts in KNOWN_BRAND_HOSTS.items():
+        if not re.search(rf"(?i)(?<![a-z0-9]){brand}\.(?:com|co\.uk|co\.jp|net)", url):
+            continue
+        if any(
+            normalized_host == trusted or normalized_host.endswith("." + trusted)
+            for trusted in trusted_hosts
+        ):
+            continue
+        return brand
+    return None
+
+
 def analyze_message(message: str, msg_type: str = "General") -> dict:
     """
     Rule-based heuristic analysis of a message for phishing/scam patterns.
@@ -23,9 +54,9 @@ def analyze_message(message: str, msg_type: str = "General") -> dict:
         })
 
     # 2. URL Risk Detection
-    url_pattern = r'https?://[^\s]+|www\.[^\s]+|[a-zA-Z0-9.-]+\.(?:com|org|net|xyz|top|club|info|site|online|ru|cc|link|loan|win)[^\s]*'
-    found_urls = re.findall(url_pattern, message)
+    found_urls = _extract_urls(message)
     url_score = 0
+    brand_mismatches = []
 
     if found_urls:
         susp_tlds = ['.xyz', '.top', '.club', '.info', '.site', '.online', '.ru', '.cc', '.link', '.loan', '.win']
@@ -40,6 +71,13 @@ def analyze_message(message: str, msg_type: str = "General") -> dict:
             url_score += 35
         if has_ip:
             url_score += 40
+        for found_url in found_urls:
+            parsed_url = urlparse(found_url if "://" in found_url else f"http://{found_url}")
+            brand = _brand_path_mismatch(found_url, parsed_url.hostname or "")
+            if brand:
+                brand_mismatches.append((brand, parsed_url.hostname or "unknown host"))
+        if brand_mismatches:
+            url_score = 100
         url_score = min(100, url_score)
 
         detail_parts = []
@@ -56,6 +94,11 @@ def analyze_message(message: str, msg_type: str = "General") -> dict:
             "title": "Suspicious Links Detected",
             "detail": f"Contains links with {', '.join(detail_parts)}."
         })
+        for brand, hostname in brand_mismatches:
+            reasons.append({
+                "title": "Brand/domain mismatch",
+                "detail": f"The URL mentions {brand.title()} but leads to {hostname}. Check the registered domain before opening it."
+            })
 
     # 3. Scam Patterns (Financial, Credential harvesting, Giveaways)
     scam_keywords = [
@@ -79,6 +122,8 @@ def analyze_message(message: str, msg_type: str = "General") -> dict:
         base_score += url_score * 0.40
     if scam_score > 0:
         base_score += scam_score * 0.35
+    if brand_mismatches:
+        base_score = max(base_score, 70)
 
     risk_score = int(min(100, base_score))
 
@@ -129,9 +174,9 @@ def analyze_url(url: str) -> dict:
     findings = {
         "https": {"val": "✓ Secure (TLS)", "status": "safe"},
         "pattern": {"val": "No anomaly detected", "status": "safe"},
-        "age": {"val": "Over 2 years", "status": "safe"},
-        "redirects": {"val": "0 (Direct)", "status": "safe"},
-        "reputation": {"val": "Clean / Trusted", "status": "safe"}
+        "age": {"val": "Not checked (no domain-age lookup)", "status": "warning"},
+        "redirects": {"val": "Not checked (link not opened)", "status": "warning"},
+        "reputation": {"val": "Unverified (no reputation feed)", "status": "warning"}
     }
 
     # 1. HTTPS check
@@ -146,6 +191,7 @@ def analyze_url(url: str) -> dict:
         findings["pattern"] = {"val": "⛔ Raw IP Address", "status": "dangerous"}
 
     # 3. Domain parsing
+    hostname = ""
     try:
         parsed = urlparse(url_clean if "://" in url_clean else f"http://{url_clean}")
         hostname = parsed.hostname or ""
@@ -177,17 +223,23 @@ def analyze_url(url: str) -> dict:
         score += 30
         findings["pattern"] = {"val": "⚠ Malformed URL Structure", "status": "suspicious"}
 
+    # A brand-looking domain in the path can disguise an unrelated host.
+    brand = _brand_path_mismatch(url_clean, hostname)
+    if brand:
+        score += 65
+        findings["pattern"] = {
+            "val": f"Brand/domain mismatch ({brand.title()} text, host: {hostname})",
+            "status": "dangerous",
+        }
+
     # Determine Verdict
     score = min(100, score)
     if score > 60:
         verdict = "DANGEROUS"
-        findings["reputation"] = {"val": "🚩 High Threat Risk", "status": "dangerous"}
-        findings["age"] = {"val": "< 14 days (Newly Registered)", "status": "suspicious"}
-        findings["redirects"] = {"val": "3 (Hidden Redirects)", "status": "suspicious"}
+        findings["reputation"] = {"val": "High heuristic risk (not reputation checked)", "status": "dangerous"}
     elif score > 30:
         verdict = "SUSPICIOUS"
-        findings["reputation"] = {"val": "⚠ Unverified Domain", "status": "suspicious"}
-        findings["redirects"] = {"val": "1 (External Redirect)", "status": "suspicious"}
+        findings["reputation"] = {"val": "Unverified (no reputation feed)", "status": "warning"}
     else:
         verdict = "SAFE"
 
