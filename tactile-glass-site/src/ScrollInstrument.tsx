@@ -97,11 +97,7 @@ export function ScrollInstrument() {
     instrument.add(markers)
 
     const pivot = new THREE.Group()
-    pivot.position.set(
-      (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z * (window.innerWidth / window.innerHeight)) * (window.innerWidth < 720 ? 0.2 : 0.34),
-      window.innerWidth < 720 ? -0.48 : 0.08,
-      0,
-    )
+    pivot.position.set(0, 0, 0)
     pivot.scale.setScalar(window.innerWidth < 720 ? 0.48 : 1.04)
     pivot.add(instrument)
     scene.add(pivot)
@@ -135,8 +131,7 @@ export function ScrollInstrument() {
         camera.updateProjectionMatrix()
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, width < 720 ? 1.2 : 1.6))
         renderer.setSize(width, height)
-        pivot.position.x = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z * camera.aspect * (width < 720 ? 0.2 : 0.34)
-        pivot.position.y = width < 720 ? -0.48 : 0.08
+        pivot.position.set(0, 0, 0)
         pivot.scale.setScalar(width < 720 ? 0.48 : 1.04)
         draw()
       })
