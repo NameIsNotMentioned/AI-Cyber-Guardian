@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react'
 import { Glass } from '@samasante/liquid-glass'
 import { animate, createTimeline, onScroll, spring, svg } from 'animejs'
 import './App.css'
+
+const ScrollInstrument = lazy(() => import('./ScrollInstrument').then(({ ScrollInstrument: Instrument }) => ({ default: Instrument })))
 
 type ScanResult = {
   verdict: 'SAFE' | 'SUSPICIOUS' | 'DANGEROUS'
@@ -41,6 +43,12 @@ function App() {
   const [result, setResult] = useState<ScanResult | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [serverNote, setServerNote] = useState('')
+  const [sceneReady, setSceneReady] = useState(false)
+
+  useEffect(() => {
+    const sceneTimer = window.setTimeout(() => setSceneReady(true), 180)
+    return () => window.clearTimeout(sceneTimer)
+  }, [])
 
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -145,6 +153,8 @@ function App() {
   const verdictClass = result?.verdict.toLowerCase() ?? ''
 
   return (
+    <>
+    {sceneReady && <Suspense fallback={null}><ScrollInstrument /></Suspense>}
     <main className="site-shell" ref={rootRef}>
       <div className="paper-grain" aria-hidden="true" />
       <header className="masthead">
@@ -222,6 +232,7 @@ function App() {
       <section className="closing-note" data-reveal><span className="closing-rule" /><p>When in doubt, contact the person or organization using details you already trust.</p><a href="#top">Back to the top ↑</a></section>
       <footer className="site-footer"><a className="wordmark" href="#top"><span className="wordmark-seal" aria-hidden="true">S</span><span>SIGNAL OFFICE<small>Independent message security</small></span></a><span>AN EDUCATIONAL DEMO · VERIFY BEFORE YOU ACT</span><a href="#method">Detection notes ↗</a></footer>
     </main>
+    </>
   )
 }
 
