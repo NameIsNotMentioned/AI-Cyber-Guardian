@@ -2,6 +2,17 @@
 
 AI Cyber Guardian is a phishing and scam message detector featuring a 3D cybersecurity-themed frontend.
 
+## GitHub Pages
+
+The frontend is deployed automatically to GitHub Pages whenever changes are pushed to `main`.
+Visit [the published site](https://nameisnotmentioned.github.io/AI-Cyber-Guardian/) after the
+first deployment workflow completes.
+
+GitHub Pages hosts only the static frontend; it does not run the Python API. Without a separately
+deployed backend, message scanning uses the frontend's demo fallback and URL checks use local
+heuristics. To use the ML API, set `BASE_URL` in `frontend/js/api-config.js` to the URL of a
+deployed backend that allows requests from the Pages site.
+
 ## How to Run
 
 ### Frontend
