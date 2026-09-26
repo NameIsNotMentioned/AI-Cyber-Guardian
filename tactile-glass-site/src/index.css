@@ -6,24 +6,26 @@
 :root {
   font-family: 'IBM Plex Sans', sans-serif;
   color: #292822;
-  background: #e9e4da;
+  background: #f4f3ee;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-optical-sizing: auto;
   font-weight: 400;
-  --paper: #e9e4da;
-  --paper-light: #f3efe7;
-  --paper-shadow: #d9d2c5;
-  --ink: #292822;
-  --ink-soft: #66645c;
-  --muted: #858176;
-  --line: rgba(61, 57, 47, .2);
-  --copper: #a34e38;
-  --copper-dark: #783a2c;
-  --moss: #586b58;
-  --brass: #a18b58;
+  --paper: #f4f3ee;
+  --paper-light: #fffefa;
+  --paper-shadow: #e5e3dc;
+  --ink: #292a26;
+  --ink-soft: #5f625c;
+  --muted: #74786f;
+  --line: rgba(48, 52, 45, .18);
+  --accent-soft: #536653;
+  --accent-strong: #3d503e;
+  --moss: #4c6a50;
+  --accent-rule: #777550;
+  --warning: #8a641b;
+  --danger: #a13f35;
   --serif: 'Newsreader Variable', Georgia, serif;
   --sans: 'IBM Plex Sans', Arial, sans-serif;
   color-scheme: light;
@@ -35,8 +37,8 @@ body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; }
-::selection { color: var(--paper-light); background: var(--copper-dark); }
-:focus-visible { outline: 2px solid var(--copper); outline-offset: 4px; }
+::selection { color: var(--paper-light); background: var(--accent-strong); }
+:focus-visible { outline: 2px solid var(--moss); outline-offset: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

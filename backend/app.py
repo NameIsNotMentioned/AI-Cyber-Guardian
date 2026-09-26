@@ -20,13 +20,16 @@ def scan_message():
 
     message = data['message']
     msg_type = data.get('type', 'General')
-    engine = request.args.get('engine', 'rules')
+    # Prefer the trained classifier for normal scans. Pass ?engine=rules to
+    # compare it with the transparent heuristic detector during development.
+    engine = request.args.get('engine', 'ml')
 
     try:
         if engine == 'ml':
             result = model.predict(message)
             if result is None:
-                return jsonify({"error": "ML model not trained. Run python backend/model.py"}), 500
+                # Keep the API usable on a fresh clone before the model is trained.
+                result = detector.analyze_message(message, msg_type)
         else:
             result = detector.analyze_message(message, msg_type)
 

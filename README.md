@@ -45,3 +45,24 @@ Open `frontend/index.html` directly in your browser or serve the `frontend` dire
    ```bash
    python app.py
    ```
+
+### Train the phishing model
+
+The message API uses the trained TF-IDF classifier by default when its model
+artifact exists, and falls back to the rule-based detector before training.
+To reproduce training from the pinned public corpus:
+
+```bash
+python backend/fetch_training_data.py
+python backend/model.py
+```
+
+The first command downloads and verifies the Apache-2.0 text corpus into the
+git-ignored `dataset/external/` directory. The second prints stratified
+holdout metrics and saves `backend/models/phishing_model.pkl` (also ignored).
+The scanner can explicitly use the heuristic detector with
+`POST /api/scan?engine=rules`.
+
+The reported metrics are from a random holdout of this corpus and are not a
+guarantee of real-world phishing detection accuracy. Keep human review and
+official-channel verification in place for consequential messages.

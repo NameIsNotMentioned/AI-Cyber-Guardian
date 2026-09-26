@@ -10,3 +10,4 @@ venv/
 !.env.example
 
 backend/models/*.pkl
+dataset/external/
