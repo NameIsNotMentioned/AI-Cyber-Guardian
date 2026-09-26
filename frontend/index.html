@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Cyber Guardian | Phishing Detection</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/scanner.css">
+    <style>
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 80px 1.5rem 3rem;
+        }
+
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.14;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+        }
+
+        h1 {  
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            margin: 0 0 1rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .subheadline {
+            font-size: 1.05rem;
+            margin: 0 0 2.5rem;
+            color: var(--text-secondary);
+        }
+
+        .status-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            margin-bottom: 2.5rem;
+            padding: 0.35rem 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--accent-green);
+            font-family: var(--font-mono);
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .counters {
+            display: flex;
+            gap: 3.5rem;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .counter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .counter-value {
+            font-size: 2rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        .counter-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            padding: 3rem 2rem 5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--panel-bg);
+            padding: 1.75rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: border-color 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .feature-card:hover {
+            border-color: var(--border-strong);
+        }
+
+        .feature-card .icon {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            margin: 0 0 0.4rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        #page-transition-curtain {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 2000;
+            transform: scaleX(0);
+            transform-origin: left center;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="webgl-loader" id="webgl-loader" role="status"><span class="webgl-loader-spinner"></span><span>Initializing Cyber Guardian...</span></div>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Cyber Guardian
+        </a>
+        <button class="hamburger" id="nav-toggle" type="button" aria-label="Open navigation" aria-controls="nav-links" aria-expanded="false"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="scanner.html">Scanner</a>
+            <a href="url-scanner.html">URL Scanner</a>
+            <a href="about.html">About</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <canvas id="hero-canvas" aria-hidden="true"></canvas>
+        <div class="hero-content">
+            <h1 class="anime-text">Cyber Guardian</h1>
+            <p class="subheadline anime-text">Practical detection for phishing messages and suspicious links.</p>
+
+            <div class="status-line">
+                <div class="dot"></div>
+                System operational
+            </div>
+
+            <div class="counters">
+                <div class="counter-item">
+                    <span id="scanned-count" class="counter-value">0</span>
+                    <span class="counter-label">Messages scanned</span>
+                </div>
+                <div class="counter-item">
+                    <span id="threats-count" class="counter-value">0</span>
+                    <span class="counter-label">Threats detected</span>
+                </div>
+            </div>
+
+            <a href="scanner.html" class="cta-button">Start scanning</a>
+        </div>
+    </section>
+
+    <section class="features">
+        <a href="scanner.html" class="feature-card">
+            <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
+            <h3>Message Scanner</h3>
+            <p>Detect phishing patterns in texts and emails.</p>
+        </a>
+        <a href="url-scanner.html" class="feature-card">
+            <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+            <h3>URL Scanner</h3>
+            <p>Check the safety of suspicious links.</p>
+        </a>
+        <a href="dashboard.html" class="feature-card">
+            <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15v2"/><path d="M12 9v8"/><path d="M17 5v12"/></svg></span>
+            <h3>Threat Dashboard</h3>
+            <p>Review scan trends and statistics.</p>
+        </a>
+        <a href="about.html" class="feature-card">
+            <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+            <h3>Detection Approach</h3>
+            <p>Understand why a message was flagged as risky.</p>
+        </a>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="js/three-scene.js"></script>
+    <script src="js/anime.min.js"></script>
+    <script src="js/page-transitions.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

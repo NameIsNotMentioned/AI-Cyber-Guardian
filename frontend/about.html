@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | Cyber Guardian</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .main-container {
+            padding-top: 100px;
+            max-width: 800px;
+            line-height: 1.65;
+        }
+
+        .about-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .about-header h1 {
+            font-size: 1.8rem;
+            margin: 0 0 0.5rem;
+            font-weight: 600;
+        }
+
+        .about-header p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .section h2 {
+            font-size: 1.15rem;
+        }
+
+        .section p, .section li {
+            color: var(--text-secondary);
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .tech-item {
+            background: var(--bg-dark);
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            border: 1px solid var(--border-strong);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Cyber Guardian
+        </a>
+        <button class="hamburger" id="nav-toggle" type="button" aria-label="Open navigation" aria-controls="nav-links" aria-expanded="false"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="scanner.html">Scanner</a>
+            <a href="url-scanner.html">URL Scanner</a>
+            <a href="about.html">About</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="about-header">
+            <h1>About Cyber Guardian</h1>
+            <p>Phishing and scam message detection</p>
+        </div>
+
+        <div class="section">
+            <h2>Project purpose</h2>
+            <p>Cyber Guardian is designed to protect users from social engineering. By analyzing text patterns, URL structures, and psychological triggers, it provides a real-time risk assessment of incoming messages to help prevent credential theft and financial fraud.</p>
+        </div>
+
+        <div class="section">
+            <h2>Detection approach</h2>
+            <p>The system uses a dual-layer detection strategy:</p>
+            <ul>
+                <li><strong>Rule-based engine:</strong> checks for known phishing signatures, urgency keywords, and suspicious URL patterns.</li>
+                <li><strong>ML-based engine:</strong> a scikit-learn pipeline using TF-IDF vectorization and logistic regression to catch patterns rules miss.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Tech stack</h2>
+            <div class="tech-stack">
+                <div class="tech-item">Flask (Python)</div>
+                <div class="tech-item">Three.js (WebGL)</div>
+                <div class="tech-item">scikit-learn</div>
+                <div class="tech-item">pandas / joblib</div>
+                <div class="tech-item">Vanilla JS / CSS</div>
+                <div class="tech-item">Anime.js</div>
+                <div class="tech-item">Chart.js</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/anime.min.js"></script>
+    <script src="js/page-transitions.js"></script>
+    <script src="js/navigation.js"></script>
+</body>
+</html>

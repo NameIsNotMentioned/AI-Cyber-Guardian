@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | AI Cyber Guardian</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/anime.min.js"></script>
+    <script src="js/page-transitions.js"></script>
+    <script src="js/dashboard.js" defer></script>
+    <style>
+        /* Shared Nav Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            box-sizing: border-box;
+            z-index: 1000;
+            background: rgba(255, 254, 250, 0.96);
+            backdrop-filter: blur(4px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .main-container {
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">CYBER GUARDIAN</a>
+        <button class="hamburger" id="nav-toggle" type="button" aria-label="Open navigation" aria-controls="nav-links" aria-expanded="false"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="scanner.html">Scanner</a>
+            <a href="url-scanner.html">URL Scanner</a>
+            <a href="about.html">About</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- This section will be injected by dashboard.js if ?result=1 -->
+        <div id="scan-result-view" class="hidden"></div>
+
+        <!-- Regular Dashboard Stats -->
+        <div id="regular-stats-view">
+            <h1 class="page-title">Cyber dashboard</h1>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span id="stat-scanned" class="stat-value">0</span>
+                    <span class="stat-label">Messages Scanned</span>
+                </div>
+                <div class="stat-card">
+                    <span id="stat-threats" class="stat-value">0</span>
+                    <span class="stat-label">Threats Detected</span>
+                </div>
+                <div class="stat-card">
+                    <span id="stat-safe" class="stat-value">0</span>
+                    <span class="stat-label">Safe Messages</span>
+                </div>
+                <div class="stat-card">
+                    <span id="stat-critical" class="stat-value">0</span>
+                    <span class="stat-label">Critical Threats</span>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-panel">
+                    <h3>Threat Activity (14 Days)</h3>
+                    <canvas id="activityChart"></canvas>
+                </div>
+                <div class="chart-panel">
+                    <h3>Threat Breakdown</h3>
+                    <canvas id="breakdownChart"></canvas>
+                </div>
+                <div class="chart-panel small-panel">
+                    <h3>Risk Distribution</h3>
+                    <div id="risk-distribution-bar" class="distribution-bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

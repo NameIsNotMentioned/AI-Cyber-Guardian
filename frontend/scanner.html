@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Scanner — Cyber Guardian</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/scanner.css">
+    <style>
+        .main-container {
+            padding-top: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            margin: 0 0 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="webgl-loader" id="webgl-loader" role="status"><span class="webgl-loader-spinner"></span><span>Initializing Cyber Guardian...</span></div>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Cyber Guardian
+        </a>
+        <button class="hamburger" id="nav-toggle" type="button" aria-label="Open navigation" aria-controls="nav-links" aria-expanded="false"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="scanner.html">Scanner</a>
+            <a href="url-scanner.html">URL Scanner</a>
+            <a href="about.html">About</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <h1 class="page-title">Message Threat Scanner</h1>
+
+        <div class="scanner-layout">
+            <div class="shield-container">
+                <canvas id="status-shield-canvas"></canvas>
+                <div class="shield-state-label" id="shield-state-label" aria-live="polite">SECURE</div>
+            </div>
+
+            <div class="scanner-panel">
+                <div class="panel-header">
+                    <label for="msg-type">Message source:</label>
+                    <select id="msg-type">
+                        <option value="Email">Email</option>
+                        <option value="SMS">SMS</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="URL">URL</option>
+                    </select>
+                </div>
+
+                <textarea id="message-input" placeholder="Paste the suspicious message here..."></textarea>
+
+                <div class="panel-footer">
+                    <button id="scan-btn" disabled>Scan message</button>
+                    <div id="error-message" class="error-hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="scan-progress" class="progress-container hidden">
+            <div class="progress-header">Scanning</div>
+            <div class="progress-list">
+                <div class="progress-step" id="step-1">
+                    <span class="spinner"></span>
+                    <span class="step-text">Extracting features</span>
+                </div>
+                <div class="progress-step" id="step-2">
+                    <span class="spinner"></span>
+                    <span class="step-text">Checking URLs</span>
+                </div>
+                <div class="progress-step" id="step-3">
+                    <span class="spinner"></span>
+                    <span class="step-text">Analyzing language</span>
+                </div>
+                <div class="progress-step" id="step-4">
+                    <span class="spinner"></span>
+                    <span class="step-text">Running threat model</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="js/three-scene.js"></script>
+    <script src="js/anime.min.js"></script>
+    <script src="js/page-transitions.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/scanner.js" defer></script>
+</body>
+</html>

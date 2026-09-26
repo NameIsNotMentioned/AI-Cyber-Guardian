@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Scanner — Cyber Guardian</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/scanner.css">
+    <style>
+        .main-container {
+            padding-top: 100px;
+            max-width: 760px;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .url-input-group input {
+            flex: 1;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 0.7rem 1rem;
+            color: var(--text-primary);
+            outline: none;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .url-input-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .url-input-group input::placeholder {
+            color: var(--text-muted);
+        }
+
+        #url-scan-btn {
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #fff;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #url-scan-btn:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        #url-scan-btn:not(:disabled):hover {
+            background: #405944;
+        }
+
+        #url-error-message {
+            color: var(--accent-red);
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
+            font-family: var(--font-mono);
+        }
+
+        .results-panel {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .results-grid {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .result-value.status-safe { color: var(--accent-green); }
+        .result-value.status-suspicious { color: var(--accent-yellow); }
+        .result-value.status-dangerous { color: var(--accent-red); }
+
+        .verdict-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Cyber Guardian
+        </a>
+        <button class="hamburger" id="nav-toggle" type="button" aria-label="Open navigation" aria-controls="nav-links" aria-expanded="false"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="scanner.html">Scanner</a>
+            <a href="url-scanner.html">URL Scanner</a>
+            <a href="about.html">About</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <h1 class="page-title">URL Security Scanner</h1>
+
+        <div class="scanner-panel">
+            <div class="url-input-group">
+                <input type="text" id="url-input" placeholder="https://suspicious-link.com/login" spellcheck="false">
+                <button id="url-scan-btn">Scan URL</button>
+            </div>
+
+            <div id="url-error-message" class="error-hidden"></div>
+
+            <div id="url-scan-progress" class="progress-container hidden">
+                <div class="progress-header">Analyzing URL</div>
+                <div class="progress-list">
+                    <div class="progress-step" id="u-step-1">
+                        <span class="spinner"></span>
+                        <span class="step-text">Resolving domain</span>
+                    </div>
+                    <div class="progress-step" id="u-step-2">
+                        <span class="spinner"></span>
+                        <span class="step-text">Checking certificate</span>
+                    </div>
+                    <div class="progress-step" id="u-step-3">
+                        <span class="spinner"></span>
+                        <span class="step-text">Running heuristics</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="url-results" class="results-panel hidden">
+                <div class="results-grid">
+                    <div class="result-row">
+                        <span class="result-label">Domain age</span>
+                        <span class="result-value" id="res-age">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">HTTPS</span>
+                        <span class="result-value" id="res-https">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">URL pattern</span>
+                        <span class="result-value" id="res-pattern">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Redirects</span>
+                        <span class="result-value" id="res-redirects">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Reputation</span>
+                        <span class="result-value" id="res-reputation">-</span>
+                    </div>
+                </div>
+
+                <div class="verdict-container">
+                    <div id="url-verdict" class="verdict-badge">Safe</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/anime.min.js"></script>
+    <script src="js/page-transitions.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/url-scanner.js" defer></script>
+</body>
+</html>
