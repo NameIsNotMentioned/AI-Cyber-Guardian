@@ -12,6 +12,13 @@ type ScanResult = {
   recommended_action: string
 }
 
+type UrlFinding = { val: string; status: 'safe' | 'suspicious' | 'dangerous' | 'info' }
+type UrlScanResult = {
+  verdict: 'SAFE' | 'SUSPICIOUS' | 'DANGEROUS'
+  score: number
+  findings: Record<string, UrlFinding>
+}
+
 const API_BASE_URL = 'http://localhost:5000'
 
 function analyzeOffline(message: string): ScanResult {
@@ -88,6 +95,9 @@ function App() {
   const [isScanning, setIsScanning] = useState(false)
   const [serverNote, setServerNote] = useState('')
   const [sceneReady, setSceneReady] = useState(false)
+  const [scanMode, setScanMode] = useState<'message' | 'url'>('message')
+  const [urlInput, setUrlInput] = useState('')
+  const [urlResult, setUrlResult] = useState<UrlScanResult | null>(null)
 
   useEffect(() => {
     const sceneTimer = window.setTimeout(() => setSceneReady(true), 180)
@@ -129,26 +139,22 @@ function App() {
     }
   }, [])
 
-  useEffect(() => {
+  const handleHoverEnter = (event: React.PointerEvent<HTMLElement> | React.FocusEvent<HTMLElement>) => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const items = document.querySelectorAll<HTMLElement>('.button-primary:not(:disabled), .nav-glass-link, .method-list article')
-    const cleanups: (() => void)[] = []
-    items.forEach((item) => {
-      const enter = () => animate(item, { y: -2, scale: item.matches('.method-list article') ? 1.008 : 1.025, duration: 240, ease: spring({ bounce: 0.32 }) })
-      const leave = () => animate(item, { y: 0, scale: 1, duration: 360, ease: spring({ bounce: 0.2 }) })
-      item.addEventListener('pointerenter', enter)
-      item.addEventListener('pointerleave', leave)
-      item.addEventListener('focus', enter)
-      item.addEventListener('blur', leave)
-      cleanups.push(() => {
-        item.removeEventListener('pointerenter', enter)
-        item.removeEventListener('pointerleave', leave)
-        item.removeEventListener('focus', enter)
-        item.removeEventListener('blur', leave)
-      })
-    })
-    return () => cleanups.forEach((cleanup) => cleanup())
-  }, [])
+    const item = event.currentTarget
+    if (item.hasAttribute('disabled')) return
+    animate(item, { y: -2, scale: item.matches('.method-list article') ? 1.008 : 1.025, duration: 240, ease: spring({ bounce: 0.32 }) })
+  }
+  const handleHoverLeave = (event: React.PointerEvent<HTMLElement> | React.FocusEvent<HTMLElement>) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const item = event.currentTarget
+    if (item.hasAttribute('disabled')) {
+       // if it becomes disabled while hovered, reset it
+       animate(item, { y: 0, scale: 1, duration: 0 })
+       return
+    }
+    animate(item, { y: 0, scale: 1, duration: 360, ease: spring({ bounce: 0.2 }) })
+  }
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -194,6 +200,37 @@ function App() {
     }
   }
 
+  async function submitUrlScan() {
+    const trimmed = urlInput.trim()
+    if (!trimmed || isScanning) return
+    setIsScanning(true)
+    setUrlResult(null)
+    setServerNote('')
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/scan-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: trimmed }),
+        signal: AbortSignal.timeout(5000),
+      })
+      if (!response.ok) throw new Error(`Server returned ${response.status}`)
+      const data = await response.json() as UrlScanResult
+      setUrlResult(data)
+    } catch {
+      setServerNote('Could not reach the API. Check that the Flask server is running.')
+      setUrlResult({ verdict: 'SUSPICIOUS', score: 50, findings: { error: { val: 'Backend unreachable', status: 'suspicious' } } })
+    } finally {
+      setIsScanning(false)
+    }
+  }
+
+  function switchMode(mode: 'message' | 'url') {
+    setScanMode(mode)
+    setResult(null)
+    setUrlResult(null)
+    setServerNote('')
+  }
+
   const verdictClass = result?.verdict.toLowerCase() ?? ''
 
   return (
@@ -205,7 +242,7 @@ function App() {
         <a className="wordmark" href="#top" aria-label="Signal Office home"><span className="wordmark-seal" aria-hidden="true">S</span><span>SIGNAL OFFICE<small>Independent message security</small></span></a>
         <nav aria-label="Main navigation">
           <a href="#method">Method</a><a href="#scanner">Try the scanner</a>
-          <a className="nav-glass-link" href="#scanner">
+          <a className="nav-glass-link" href="#scanner" onPointerEnter={handleHoverEnter} onPointerLeave={handleHoverLeave} onFocus={handleHoverEnter} onBlur={handleHoverLeave}>
             <Glass className="nav-glass" radius={999} optics={{ depth: 0.18, strength: 0.08, dispersion: 0.025, frost: 0.4, brightness: 0.12, specular: 0.3, sheenAngle: 135 }} refract={<span className="nav-refract" />}>
               <span>Open case file <span aria-hidden="true">↗</span></span>
             </Glass>
@@ -218,7 +255,7 @@ function App() {
           <p className="hero-kicker"><span className="status-dot" /> FIELD NOTE 01 <span>·</span> MESSAGE AUTHENTICITY</p>
           <h1 className="hero-title">A second look<br />before you <em>click.</em></h1>
           <p className="hero-copy">Suspicious messages borrow urgency, familiar names and convincing links. Signal Office helps you slow the moment down and see what deserves a closer look.</p>
-          <div className="hero-actions"><a className="button-primary" href="#scanner">Examine a message <span aria-hidden="true">↘</span></a><a className="text-link" href="#method">How the review works</a></div>
+          <div className="hero-actions"><a className="button-primary" href="#scanner" onPointerEnter={handleHoverEnter} onPointerLeave={handleHoverLeave} onFocus={handleHoverEnter} onBlur={handleHoverLeave}>Examine a message <span aria-hidden="true">↘</span></a><a className="text-link" href="#method">How the review works</a></div>
           <div className="hero-footnote"><span>01 / 03</span><span>RULES-BASED REVIEW · NO MESSAGE STORED</span></div>
         </div>
 
@@ -243,32 +280,64 @@ function App() {
       <section className="ticker" aria-label="Service principles"><span>PAUSE BEFORE YOU TRUST</span><span aria-hidden="true">✳</span><span>CHECK THE SENDER</span><span aria-hidden="true">✳</span><span>FOLLOW THE LINK, NOT THE CLAIM</span><span aria-hidden="true">✳</span><span>PAUSE BEFORE YOU TRUST</span></section>
 
       <section className="method-section" id="method" data-reveal>
-        <div className="section-index">A / THE METHOD</div>
-        <div className="method-main"><p className="section-overline">CLEAR SIGNALS, EXPLAINED</p><h2>More context.<br /><em>Less guesswork.</em></h2><p className="method-intro">A message can be suspicious without being malicious. Our review surfaces the language patterns and link clues that warrant a human check.</p></div>
+        <div className="method-left">
+          <div className="section-index">A / THE METHOD</div>
+          <div className="method-main"><p className="section-overline">CLEAR SIGNALS, EXPLAINED</p><h2>More context.<br /><em>Less guesswork.</em></h2><p className="method-intro">A message can be suspicious without being malicious. Our review surfaces the language patterns and link clues that warrant a human check.</p></div>
+        </div>
         <div className="method-list">
-          <article><span className="method-number">01</span><div><h3>Read the pressure</h3><p>Urgency, prize claims and requests for account details are surfaced as separate signals.</p></div><span className="method-mark">↗</span></article>
-          <article><span className="method-number">02</span><div><h3>Inspect the link</h3><p>Visible URLs are checked for suspicious hosts, insecure schemes and misleading patterns.</p></div><span className="method-mark">↗</span></article>
-          <article><span className="method-number">03</span><div><h3>Keep your judgment</h3><p>Results explain why a message was flagged. Verify important requests through a known channel.</p></div><span className="method-mark">↗</span></article>
+          <article tabIndex={0} onPointerEnter={handleHoverEnter} onPointerLeave={handleHoverLeave} onFocus={handleHoverEnter} onBlur={handleHoverLeave}><span className="method-number">01</span><div><h3>Read the pressure</h3><p>Urgency, prize claims and requests for account details are surfaced as separate signals.</p></div><span className="method-mark">↗</span></article>
+          <article tabIndex={0} onPointerEnter={handleHoverEnter} onPointerLeave={handleHoverLeave} onFocus={handleHoverEnter} onBlur={handleHoverLeave}><span className="method-number">02</span><div><h3>Inspect the link</h3><p>Visible URLs are checked for suspicious hosts, insecure schemes and misleading patterns.</p></div><span className="method-mark">↗</span></article>
+          <article tabIndex={0} onPointerEnter={handleHoverEnter} onPointerLeave={handleHoverLeave} onFocus={handleHoverEnter} onBlur={handleHoverLeave}><span className="method-number">03</span><div><h3>Keep your judgment</h3><p>Results explain why a message was flagged. Verify important requests through a known channel.</p></div><span className="method-mark">↗</span></article>
         </div>
       </section>
 
       <section className="scanner-section" id="scanner" data-reveal>
         <div className="scanner-heading"><div><p className="section-overline">B / PRIVATE MESSAGE REVIEW</p><h2>Bring the message.<br /><em>Keep the context.</em></h2></div><p>Paste the text you want to inspect. This demo sends it only to your configured local API; if unavailable, a small in-browser ruleset provides a preview.</p></div>
+
+        <div className="scan-mode-tabs" role="tablist" aria-label="Scanner mode">
+          <button role="tab" aria-selected={scanMode === 'message'} className={`scan-tab${scanMode === 'message' ? ' is-active' : ''}`} onClick={() => switchMode('message')}>Message</button>
+          <button role="tab" aria-selected={scanMode === 'url'} className={`scan-tab${scanMode === 'url' ? ' is-active' : ''}`} onClick={() => switchMode('url')}>URL</button>
+        </div>
+
         <div className="scanner-layout">
-          <form ref={formRef} className="scan-form" onSubmit={submitScan}>
-            <label htmlFor="message-input">MESSAGE SPECIMEN <span>TEXT ONLY</span></label>
-            <textarea id="message-input" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Paste an email, text or direct message here…" rows={7} maxLength={6000} aria-describedby="privacy-note" />
-            <div className="form-footer"><span id="privacy-note">Avoid including passwords or personal account details.</span><button type="button" onClick={() => void submitScan()} className="button-primary" disabled={!message.trim() || isScanning}>{isScanning ? 'Reviewing…' : 'Review message'} <span aria-hidden="true">→</span></button></div>
-          </form>
-          <aside className={`result-sheet ${result ? `is-${verdictClass}` : ''}`} aria-live="polite" aria-busy={isScanning}>
-            <div className="result-topline"><span>REVIEW SUMMARY</span><span>{isScanning ? 'IN PROGRESS' : result ? 'COMPLETE' : 'AWAITING INPUT'}</span></div>
-            {isScanning ? <div className="reviewing-state"><span className="review-mark" /><p>Comparing message signals…</p></div> : result ? <>
-              <div className="verdict-row"><div><p className="section-overline">RISK INDICATION</p><h3 className="verdict-title">{result.verdict}</h3></div><span className="risk-number">{result.risk_score}<small>/100</small></span></div>
-              <div className="risk-track"><span style={{ width: `${result.risk_score}%` }} /></div>
-              <ul className="reason-list">{result.reasons.length ? result.reasons.map((reason) => <li key={reason.title}><span aria-hidden="true">↗</span><div><b>{reason.title}</b><p>{reason.detail}</p></div></li>) : <li><span aria-hidden="true">✓</span><div><b>No obvious rule matches</b><p>This is not a guarantee that the message is safe.</p></div></li>}</ul>
-              <p className="recommended-action"><b>Suggested next step</b>{result.recommended_action}</p>
-              <p className="server-note">{serverNote}</p>
-            </> : <div className="empty-result"><svg viewBox="0 0 48 48" role="img" aria-label="Unreviewed message"><circle cx="24" cy="24" r="18" /><path id="scan-stamp-path" d="M16 24h16" /><path id="scan-stamp-target" d="M16 28l8 8 18-22" visibility="hidden" /></svg><p>Your notes will appear here<br />after review.</p></div>}
+          {scanMode === 'message' ? (
+            <form ref={formRef} className="scan-form" onSubmit={submitScan}>
+              <label htmlFor="message-input">MESSAGE SPECIMEN <span>TEXT ONLY</span></label>
+              <textarea id="message-input" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Paste an email, text or direct message here…" rows={7} maxLength={6000} aria-describedby="privacy-note" />
+              <div className="form-footer"><span id="privacy-note">Avoid including passwords or personal account details.</span><button type="button" onClick={() => void submitScan()} className="button-primary" disabled={!message.trim() || isScanning} onPointerEnter={handleHoverEnter} onPointerLeave={handleHoverLeave} onFocus={handleHoverEnter} onBlur={handleHoverLeave}>{isScanning ? 'Reviewing…' : 'Review message'} <span aria-hidden="true">→</span></button></div>
+            </form>
+          ) : (
+            <div className="scan-form">
+              <label htmlFor="url-input">URL SPECIMEN <span>LINK ONLY</span></label>
+              <input id="url-input" type="url" value={urlInput} onChange={(e) => setUrlInput(e.target.value)} placeholder="https://suspicious-link.example.com/path" className="url-input" onKeyDown={(e) => e.key === 'Enter' && void submitUrlScan()} aria-describedby="url-privacy-note" />
+              <div className="form-footer"><span id="url-privacy-note">Only the URL is submitted — no personal data is sent.</span><button type="button" onClick={() => void submitUrlScan()} className="button-primary" disabled={!urlInput.trim() || isScanning} onPointerEnter={handleHoverEnter} onPointerLeave={handleHoverLeave} onFocus={handleHoverEnter} onBlur={handleHoverLeave}>{isScanning ? 'Checking…' : 'Check URL'} <span aria-hidden="true">→</span></button></div>
+            </div>
+          )}
+
+          <aside className={`result-sheet ${(result || urlResult) ? `is-${scanMode === 'url' ? urlResult?.verdict.toLowerCase() : verdictClass}` : ''}`} aria-live="polite" aria-busy={isScanning}>
+            <div className="result-topline"><span>REVIEW SUMMARY</span><span>{isScanning ? 'IN PROGRESS' : (result || urlResult) ? 'COMPLETE' : 'AWAITING INPUT'}</span></div>
+            {isScanning ? <div className="reviewing-state"><span className="review-mark" /><p>Comparing signals…</p></div>
+              : scanMode === 'message' && result ? <>
+                <div className="verdict-row"><div><p className="section-overline">RISK INDICATION</p><h3 className="verdict-title">{result.verdict}</h3></div><span className="risk-number">{result.risk_score}<small>/100</small></span></div>
+                <div className="risk-track"><span style={{ width: `${result.risk_score}%` }} /></div>
+                <ul className="reason-list">{result.reasons.length ? result.reasons.map((reason) => <li key={reason.title}><span aria-hidden="true">↗</span><div><b>{reason.title}</b><p>{reason.detail}</p></div></li>) : <li><span aria-hidden="true">✓</span><div><b>No obvious rule matches</b><p>This is not a guarantee that the message is safe.</p></div></li>}</ul>
+                <p className="recommended-action"><b>Suggested next step</b>{result.recommended_action}</p>
+                <p className="server-note">{serverNote}</p>
+              </>
+              : scanMode === 'url' && urlResult ? <>
+                <div className="verdict-row"><div><p className="section-overline">URL RISK INDICATION</p><h3 className="verdict-title">{urlResult.verdict}</h3></div><span className="risk-number">{urlResult.score}<small>/100</small></span></div>
+                <div className="risk-track"><span style={{ width: `${urlResult.score}%` }} /></div>
+                <ul className="reason-list url-findings">
+                  {Object.entries(urlResult.findings).map(([key, finding]) => (
+                    <li key={key} className={`finding-${finding.status}`}>
+                      <span aria-hidden="true">{finding.status === 'safe' ? '✓' : '↗'}</span>
+                      <div><b>{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</b><p>{finding.val}</p></div>
+                    </li>
+                  ))}
+                </ul>
+                <p className="server-note">{serverNote}</p>
+              </>
+              : <div className="empty-result"><svg viewBox="0 0 48 48" role="img" aria-label="Unreviewed message"><circle cx="24" cy="24" r="18" /><path id="scan-stamp-path" d="M16 24h16" /><path id="scan-stamp-target" d="M16 28l8 8 18-22" visibility="hidden" /></svg><p>Your notes will appear here<br />after review.</p></div>}
           </aside>
         </div>
       </section>
