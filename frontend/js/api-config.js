@@ -1,12 +1,12 @@
-(function() {
+(function () {
     // CONFIGURATION: Central API Base URL
     window.API_CONFIG = {
-        BASE_URL: 'http://localhost:5000/api',
-        TIMEOUT: 5000
+        BASE_URL: 'https://ai-cyber-guardian-ieri.onrender.com/api',
+        TIMEOUT: 15000
     };
 
     // Utility for standardized fetch with error handling
-    window.secureFetch = async function(endpoint, options = {}) {
+    window.secureFetch = async function (endpoint, options = {}) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), window.API_CONFIG.TIMEOUT);
 
@@ -69,7 +69,7 @@
 
     // Add animation for banner
     const style = document.createElement('style');
-    style,style.innerHTML = `
+    style, style.innerHTML = `
         @keyframes slideDown {
             from { transform: translate(-50%, -100%); }
             to { transform: translate(-50%, 0); }
