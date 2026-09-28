@@ -78,5 +78,7 @@ def get_stats():
     })
 
 if __name__ == "__main__":
-    print("AI Cyber Guardian API server running on http://127.0.0.1:5000")
-    app.run(debug=True, port=5000, host="0.0.0.0")
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    port = int(os.environ.get("PORT", 5000))
+    print(f"AI Cyber Guardian API server running on http://0.0.0.0:{port}")
+    app.run(debug=debug, port=port, host="0.0.0.0")

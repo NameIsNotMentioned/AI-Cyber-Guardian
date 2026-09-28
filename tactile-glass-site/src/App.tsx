@@ -19,7 +19,8 @@ type UrlScanResult = {
   findings: Record<string, UrlFinding>
 }
 
-const API_BASE_URL = 'http://localhost:5000'
+// Falls back to localhost in development; set VITE_API_BASE_URL in production
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000'
 
 function analyzeOffline(message: string): ScanResult {
   const text = message.toLowerCase()
